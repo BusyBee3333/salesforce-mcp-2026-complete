@@ -1,0 +1,28 @@
+{
+  "name": "mcp-server-salesforce",
+  "version": "1.0.0",
+  "description": "Production-quality MCP server for Salesforce CRM — 19 tools covering Leads, Contacts, Accounts, Opportunities, Cases, and SOQL",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "mcp-server-salesforce": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:http": "MCP_TRANSPORT=http node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "keywords": ["mcp", "salesforce", "crm", "claude", "ai", "tools"],
+  "author": "BusyBee3333",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0"
+  }
+}
