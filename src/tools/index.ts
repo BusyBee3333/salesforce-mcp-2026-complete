@@ -21,21 +21,21 @@ export class ToolRegistry {
   constructor(client: SalesforceClient) {
     this.client = client;
     this.groupLoaders = {
-      // ── Original groups ──────────────────────────────────────────────
+      // ── Core CRM ──────────────────────────────────────────────────────
       health: async () => {
         const mod = await import("./health.js");
         return mod.getTools(this.client);
       },
-      leads: async () => {
-        const mod = await import("./leads.js");
+      accounts: async () => {
+        const mod = await import("./accounts.js");
         return mod.getTools(this.client);
       },
       contacts: async () => {
         const mod = await import("./contacts.js");
         return mod.getTools(this.client);
       },
-      accounts: async () => {
-        const mod = await import("./accounts.js");
+      leads: async () => {
+        const mod = await import("./leads.js");
         return mod.getTools(this.client);
       },
       opportunities: async () => {
@@ -44,10 +44,6 @@ export class ToolRegistry {
       },
       cases: async () => {
         const mod = await import("./cases.js");
-        return mod.getTools(this.client);
-      },
-      soql: async () => {
-        const mod = await import("./soql.js");
         return mod.getTools(this.client);
       },
       tasks: async () => {
@@ -62,23 +58,33 @@ export class ToolRegistry {
         const mod = await import("./campaigns.js");
         return mod.getTools(this.client);
       },
-      reports: async () => {
-        const mod = await import("./reports.js");
-        return mod.getTools(this.client);
-      },
-      custom_objects: async () => {
-        const mod = await import("./custom_objects.js");
-        return mod.getTools(this.client);
-      },
-      attachments: async () => {
-        const mod = await import("./attachments.js");
-        return mod.getTools(this.client);
-      },
       users: async () => {
         const mod = await import("./users.js");
         return mod.getTools(this.client);
       },
-      // ── Round 2: New groups ───────────────────────────────────────────
+      // ── Querying & Search ─────────────────────────────────────────────
+      soql: async () => {
+        const mod = await import("./soql.js");
+        return mod.getTools(this.client);
+      },
+      search: async () => {
+        const mod = await import("./search.js");
+        return mod.getTools(this.client);
+      },
+      // ── Custom & Metadata ─────────────────────────────────────────────
+      custom_objects: async () => {
+        const mod = await import("./custom_objects.js");
+        return mod.getTools(this.client);
+      },
+      object_describe: async () => {
+        const mod = await import("./object_describe.js");
+        return mod.getTools(this.client);
+      },
+      metadata: async () => {
+        const mod = await import("./metadata.js");
+        return mod.getTools(this.client);
+      },
+      // ── Sales Cloud ───────────────────────────────────────────────────
       contracts: async () => {
         const mod = await import("./contracts.js");
         return mod.getTools(this.client);
@@ -95,24 +101,139 @@ export class ToolRegistry {
         const mod = await import("./assets.js");
         return mod.getTools(this.client);
       },
+      // ── Reporting & Analytics ─────────────────────────────────────────
+      reports: async () => {
+        const mod = await import("./reports.js");
+        return mod.getTools(this.client);
+      },
       dashboards: async () => {
         const mod = await import("./dashboards.js");
         return mod.getTools(this.client);
       },
+      analytics_api: async () => {
+        const mod = await import("./analytics_api.js");
+        return mod.getTools(this.client);
+      },
+      // ── Automation & Process ──────────────────────────────────────────
       flows: async () => {
         const mod = await import("./flows.js");
         return mod.getTools(this.client);
       },
-      knowledge: async () => {
-        const mod = await import("./knowledge.js");
+      approval: async () => {
+        const mod = await import("./approval.js");
         return mod.getTools(this.client);
       },
+      // ── Files & Attachments ───────────────────────────────────────────
+      attachments: async () => {
+        const mod = await import("./attachments.js");
+        return mod.getTools(this.client);
+      },
+      content_document: async () => {
+        const mod = await import("./content_document.js");
+        return mod.getTools(this.client);
+      },
+      content_version: async () => {
+        const mod = await import("./content_version.js");
+        return mod.getTools(this.client);
+      },
+      note: async () => {
+        const mod = await import("./note.js");
+        return mod.getTools(this.client);
+      },
+      // ── Email ─────────────────────────────────────────────────────────
+      email_message: async () => {
+        const mod = await import("./email_message.js");
+        return mod.getTools(this.client);
+      },
+      email_template: async () => {
+        const mod = await import("./email_template.js");
+        return mod.getTools(this.client);
+      },
+      // ── Chatter & Social ──────────────────────────────────────────────
       chatter: async () => {
         const mod = await import("./chatter.js");
         return mod.getTools(this.client);
       },
-      approval: async () => {
-        const mod = await import("./approval.js");
+      topic: async () => {
+        const mod = await import("./topic.js");
+        return mod.getTools(this.client);
+      },
+      // ── Knowledge ─────────────────────────────────────────────────────
+      knowledge: async () => {
+        const mod = await import("./knowledge.js");
+        return mod.getTools(this.client);
+      },
+      // ── Org Admin & Security ──────────────────────────────────────────
+      profile: async () => {
+        const mod = await import("./profile.js");
+        return mod.getTools(this.client);
+      },
+      permission_set: async () => {
+        const mod = await import("./permission_set.js");
+        return mod.getTools(this.client);
+      },
+      role: async () => {
+        const mod = await import("./role.js");
+        return mod.getTools(this.client);
+      },
+      group: async () => {
+        const mod = await import("./group.js");
+        return mod.getTools(this.client);
+      },
+      queue: async () => {
+        const mod = await import("./queue.js");
+        return mod.getTools(this.client);
+      },
+      field_permissions: async () => {
+        const mod = await import("./field_permissions.js");
+        return mod.getTools(this.client);
+      },
+      sharing_rules: async () => {
+        const mod = await import("./sharing_rules.js");
+        return mod.getTools(this.client);
+      },
+      // ── Record Config ─────────────────────────────────────────────────
+      record_type: async () => {
+        const mod = await import("./record_type.js");
+        return mod.getTools(this.client);
+      },
+      validation_rule: async () => {
+        const mod = await import("./validation_rule.js");
+        return mod.getTools(this.client);
+      },
+      layout: async () => {
+        const mod = await import("./layout.js");
+        return mod.getTools(this.client);
+      },
+      // ── Developer Tools ───────────────────────────────────────────────
+      apex: async () => {
+        const mod = await import("./apex.js");
+        return mod.getTools(this.client);
+      },
+      tooling: async () => {
+        const mod = await import("./tooling.js");
+        return mod.getTools(this.client);
+      },
+      bulk_api: async () => {
+        const mod = await import("./bulk_api.js");
+        return mod.getTools(this.client);
+      },
+      composite: async () => {
+        const mod = await import("./composite.js");
+        return mod.getTools(this.client);
+      },
+      // ── Streaming & Events ────────────────────────────────────────────
+      push_topic: async () => {
+        const mod = await import("./push_topic.js");
+        return mod.getTools(this.client);
+      },
+      platform_event: async () => {
+        const mod = await import("./platform_event.js");
+        return mod.getTools(this.client);
+      },
+      // ── Org Limits & Info ─────────────────────────────────────────────
+      limits: async () => {
+        const mod = await import("./limits.js");
         return mod.getTools(this.client);
       },
     };
