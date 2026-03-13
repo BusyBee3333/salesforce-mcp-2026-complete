@@ -50,6 +50,16 @@ const UpdateLeadSchema = z.object({
   description: z.string().optional().describe("Updated description"),
 });
 
+const ConvertLeadSchema = z.object({
+  lead_id: z.string().describe("Salesforce Lead ID to convert"),
+  account_id: z.string().optional().describe("Existing Account ID to link. If omitted, a new Account is created."),
+  contact_id: z.string().optional().describe("Existing Contact ID to link. If omitted, a new Contact is created."),
+  opportunity_name: z.string().optional().describe("Name for the new Opportunity. If omitted, no Opportunity is created."),
+  converted_status: z.string().optional().default("Closed - Converted").describe("Lead status to set on conversion (must be a 'converted' status value)"),
+  do_not_create_opportunity: z.boolean().optional().default(false).describe("Set to true to skip Opportunity creation"),
+  send_notification_email: z.boolean().optional().default(false).describe("Send notification email to lead owner on conversion"),
+});
+
 function getToolDefinitions(): ToolDefinition[] {
   return [
     {
@@ -144,6 +154,26 @@ function getToolDefinitions(): ToolDefinition[] {
       },
       outputSchema: { type: "object", properties: { success: { type: "boolean" }, lead_id: { type: "string" } } },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    {
+      name: "convert_lead",
+      title: "Convert Lead",
+      description: "Convert a Salesforce lead into an Account, Contact, and optionally an Opportunity. This uses the Salesforce Lead Convert API. You can link to existing account/contact or create new ones.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          lead_id: { type: "string", description: "Lead ID to convert" },
+          account_id: { type: "string", description: "Existing Account ID (creates new Account if omitted)" },
+          contact_id: { type: "string", description: "Existing Contact ID (creates new Contact if omitted)" },
+          opportunity_name: { type: "string", description: "Name for new Opportunity (omit to skip Opportunity)" },
+          converted_status: { type: "string", description: "Lead status to set (default: Closed - Converted)" },
+          do_not_create_opportunity: { type: "boolean", description: "Skip Opportunity creation" },
+          send_notification_email: { type: "boolean", description: "Send notification email to owner" },
+        },
+        required: ["lead_id"],
+      },
+      outputSchema: { type: "object" },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
   ];
 }
@@ -284,6 +314,45 @@ function getToolHandlers(client: SalesforceClient): Record<string, ToolHandler> 
       );
 
       const response = { success: true, lead_id };
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }],
+        structuredContent: response,
+      };
+    },
+
+    convert_lead: async (args) => {
+      const params = ConvertLeadSchema.parse(args);
+
+      // Use the Salesforce Lead Convert REST action
+      const payload: Record<string, unknown> = {
+        leadId: params.lead_id,
+        convertedStatus: params.converted_status || "Closed - Converted",
+        doNotCreateOpportunity: params.do_not_create_opportunity ?? false,
+        sendNotificationEmail: params.send_notification_email ?? false,
+      };
+
+      if (params.account_id) payload.accountId = params.account_id;
+      if (params.contact_id) payload.contactId = params.contact_id;
+      if (params.opportunity_name) payload.opportunityName = params.opportunity_name;
+
+      const result = await logger.time("tool.convert_lead", () =>
+        client.post<Record<string, unknown>>("/actions/standard/convertLead", { inputs: [payload] }),
+        { tool: "convert_lead", lead_id: params.lead_id }
+      );
+
+      // The response is an array of output values
+      const outputs = Array.isArray(result) ? result[0] : result;
+      const outputValues = (outputs as Record<string, unknown>)?.["outputValues"] as Record<string, unknown> | undefined ?? outputs;
+
+      const response = {
+        success: true,
+        leadId: params.lead_id,
+        accountId: outputValues?.["accountId"],
+        contactId: outputValues?.["contactId"],
+        opportunityId: outputValues?.["opportunityId"],
+        convertedStatus: params.converted_status || "Closed - Converted",
+      };
+
       return {
         content: [{ type: "text", text: JSON.stringify(response, null, 2) }],
         structuredContent: response,

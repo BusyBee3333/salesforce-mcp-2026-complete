@@ -46,6 +46,10 @@ const UpdateContactSchema = z.object({
   mailing_country: z.string().optional(),
 });
 
+const DeleteContactSchema = z.object({
+  contact_id: z.string().describe("Salesforce Contact ID to delete"),
+});
+
 function getToolDefinitions(): ToolDefinition[] {
   return [
     {
@@ -124,6 +128,18 @@ function getToolDefinitions(): ToolDefinition[] {
       },
       outputSchema: { type: "object" },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    {
+      name: "delete_contact",
+      title: "Delete Contact",
+      description: "Permanently delete a Salesforce contact by ID. This action cannot be undone.",
+      inputSchema: {
+        type: "object",
+        properties: { contact_id: { type: "string", description: "Contact ID to delete" } },
+        required: ["contact_id"],
+      },
+      outputSchema: { type: "object" },
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
     },
   ];
 }
@@ -242,6 +258,19 @@ function getToolHandlers(client: SalesforceClient): Record<string, ToolHandler> 
       );
 
       const response = { success: true, contact_id };
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }],
+        structuredContent: response,
+      };
+    },
+
+    delete_contact: async (args) => {
+      const { contact_id } = DeleteContactSchema.parse(args);
+      await logger.time("tool.delete_contact", () =>
+        client.delete(`/sobjects/Contact/${contact_id}`), {}
+      );
+
+      const response = { success: true, contact_id, deleted: true };
       return {
         content: [{ type: "text", text: JSON.stringify(response, null, 2) }],
         structuredContent: response,

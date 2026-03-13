@@ -35,6 +35,24 @@ const CreateAccountSchema = z.object({
   billing_country: z.string().optional(),
 });
 
+const UpdateAccountSchema = z.object({
+  account_id: z.string().describe("Salesforce Account ID to update"),
+  name: z.string().optional(),
+  type: z.string().optional(),
+  industry: z.string().optional(),
+  annual_revenue: z.number().optional(),
+  number_of_employees: z.number().optional(),
+  phone: z.string().optional(),
+  website: z.string().optional(),
+  billing_city: z.string().optional(),
+  billing_state: z.string().optional(),
+  billing_country: z.string().optional(),
+});
+
+const DeleteAccountSchema = z.object({
+  account_id: z.string().describe("Salesforce Account ID to delete"),
+});
+
 function getToolDefinitions(): ToolDefinition[] {
   return [
     {
@@ -94,6 +112,42 @@ function getToolDefinitions(): ToolDefinition[] {
       },
       outputSchema: { type: "object" },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    },
+    {
+      name: "update_account",
+      title: "Update Account",
+      description: "Update an existing Salesforce account. Only include fields to change.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          account_id: { type: "string", description: "Account ID to update" },
+          name: { type: "string" },
+          type: { type: "string" },
+          industry: { type: "string" },
+          annual_revenue: { type: "number" },
+          number_of_employees: { type: "number" },
+          phone: { type: "string" },
+          website: { type: "string" },
+          billing_city: { type: "string" },
+          billing_state: { type: "string" },
+          billing_country: { type: "string" },
+        },
+        required: ["account_id"],
+      },
+      outputSchema: { type: "object" },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    {
+      name: "delete_account",
+      title: "Delete Account",
+      description: "Permanently delete a Salesforce account by ID. This action cannot be undone. Ensure no critical related records exist before deleting.",
+      inputSchema: {
+        type: "object",
+        properties: { account_id: { type: "string", description: "Account ID to delete" } },
+        required: ["account_id"],
+      },
+      outputSchema: { type: "object" },
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
     },
   ];
 }
@@ -207,6 +261,38 @@ function getToolHandlers(client: SalesforceClient): Record<string, ToolHandler> 
       );
 
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], structuredContent: result };
+    },
+
+    update_account: async (args) => {
+      const { account_id, ...updates } = UpdateAccountSchema.parse(args);
+      const payload: Record<string, unknown> = {};
+      if (updates.name !== undefined) payload.Name = updates.name;
+      if (updates.type !== undefined) payload.Type = updates.type;
+      if (updates.industry !== undefined) payload.Industry = updates.industry;
+      if (updates.annual_revenue !== undefined) payload.AnnualRevenue = updates.annual_revenue;
+      if (updates.number_of_employees !== undefined) payload.NumberOfEmployees = updates.number_of_employees;
+      if (updates.phone !== undefined) payload.Phone = updates.phone;
+      if (updates.website !== undefined) payload.Website = updates.website;
+      if (updates.billing_city !== undefined) payload.BillingCity = updates.billing_city;
+      if (updates.billing_state !== undefined) payload.BillingState = updates.billing_state;
+      if (updates.billing_country !== undefined) payload.BillingCountry = updates.billing_country;
+
+      await logger.time("tool.update_account", () =>
+        client.patch(`/sobjects/Account/${account_id}`, payload), {}
+      );
+
+      const response = { success: true, account_id };
+      return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }], structuredContent: response };
+    },
+
+    delete_account: async (args) => {
+      const { account_id } = DeleteAccountSchema.parse(args);
+      await logger.time("tool.delete_account", () =>
+        client.delete(`/sobjects/Account/${account_id}`), {}
+      );
+
+      const response = { success: true, account_id, deleted: true };
+      return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }], structuredContent: response };
     },
   };
 }

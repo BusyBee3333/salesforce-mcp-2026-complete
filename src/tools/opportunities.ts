@@ -47,6 +47,14 @@ const UpdateOpportunitySchema = z.object({
   owner_id: z.string().optional(),
 });
 
+const CloseOpportunitySchema = z.object({
+  opportunity_id: z.string().describe("Salesforce Opportunity ID to close"),
+  outcome: z.enum(["won", "lost"]).describe("Close outcome: 'won' sets stage to Closed Won; 'lost' sets stage to Closed Lost"),
+  close_date: z.string().optional().describe("Close date override in YYYY-MM-DD format (defaults to today)"),
+  amount: z.number().optional().describe("Final deal amount (optional, only for won)"),
+  description: z.string().optional().describe("Closing notes or reason for loss"),
+});
+
 function getToolDefinitions(): ToolDefinition[] {
   return [
     {
@@ -123,6 +131,24 @@ function getToolDefinitions(): ToolDefinition[] {
           owner_id: { type: "string" },
         },
         required: ["opportunity_id"],
+      },
+      outputSchema: { type: "object" },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    {
+      name: "close_opportunity",
+      title: "Close Opportunity",
+      description: "Close a Salesforce opportunity as Won or Lost. Sets the stage to 'Closed Won' or 'Closed Lost' and updates the close date. Faster than update_opportunity for the common close action.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          opportunity_id: { type: "string", description: "Opportunity ID to close" },
+          outcome: { type: "string", enum: ["won", "lost"], description: "Close outcome: won or lost" },
+          close_date: { type: "string", description: "Close date YYYY-MM-DD (defaults to today)" },
+          amount: { type: "number", description: "Final deal amount (for won deals)" },
+          description: { type: "string", description: "Closing notes or reason for loss" },
+        },
+        required: ["opportunity_id", "outcome"],
       },
       outputSchema: { type: "object" },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
@@ -237,6 +263,32 @@ function getToolHandlers(client: SalesforceClient): Record<string, ToolHandler> 
       );
 
       const response = { success: true, opportunity_id };
+      return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }], structuredContent: response };
+    },
+
+    close_opportunity: async (args) => {
+      const params = CloseOpportunitySchema.parse(args);
+      const stageName = params.outcome === "won" ? "Closed Won" : "Closed Lost";
+      const today = new Date().toISOString().split("T")[0];
+
+      const payload: Record<string, unknown> = {
+        StageName: stageName,
+        CloseDate: params.close_date || today,
+      };
+      if (params.outcome === "won" && params.amount !== undefined) payload.Amount = params.amount;
+      if (params.description !== undefined) payload.Description = params.description;
+
+      await logger.time("tool.close_opportunity", () =>
+        client.patch(`/sobjects/Opportunity/${params.opportunity_id}`, payload), {}
+      );
+
+      const response = {
+        success: true,
+        opportunity_id: params.opportunity_id,
+        stage: stageName,
+        closeDate: params.close_date || today,
+      };
+
       return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }], structuredContent: response };
     },
   };

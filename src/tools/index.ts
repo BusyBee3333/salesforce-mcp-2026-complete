@@ -49,6 +49,34 @@ export class ToolRegistry {
         const mod = await import("./soql.js");
         return mod.getTools(this.client);
       },
+      tasks: async () => {
+        const mod = await import("./tasks.js");
+        return mod.getTools(this.client);
+      },
+      events: async () => {
+        const mod = await import("./events.js");
+        return mod.getTools(this.client);
+      },
+      campaigns: async () => {
+        const mod = await import("./campaigns.js");
+        return mod.getTools(this.client);
+      },
+      reports: async () => {
+        const mod = await import("./reports.js");
+        return mod.getTools(this.client);
+      },
+      custom_objects: async () => {
+        const mod = await import("./custom_objects.js");
+        return mod.getTools(this.client);
+      },
+      attachments: async () => {
+        const mod = await import("./attachments.js");
+        return mod.getTools(this.client);
+      },
+      users: async () => {
+        const mod = await import("./users.js");
+        return mod.getTools(this.client);
+      },
     };
   }
 
