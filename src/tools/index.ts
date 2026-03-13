@@ -21,6 +21,7 @@ export class ToolRegistry {
   constructor(client: SalesforceClient) {
     this.client = client;
     this.groupLoaders = {
+      // ── Original groups ──────────────────────────────────────────────
       health: async () => {
         const mod = await import("./health.js");
         return mod.getTools(this.client);
@@ -75,6 +76,43 @@ export class ToolRegistry {
       },
       users: async () => {
         const mod = await import("./users.js");
+        return mod.getTools(this.client);
+      },
+      // ── Round 2: New groups ───────────────────────────────────────────
+      contracts: async () => {
+        const mod = await import("./contracts.js");
+        return mod.getTools(this.client);
+      },
+      orders: async () => {
+        const mod = await import("./orders.js");
+        return mod.getTools(this.client);
+      },
+      products: async () => {
+        const mod = await import("./products.js");
+        return mod.getTools(this.client);
+      },
+      assets: async () => {
+        const mod = await import("./assets.js");
+        return mod.getTools(this.client);
+      },
+      dashboards: async () => {
+        const mod = await import("./dashboards.js");
+        return mod.getTools(this.client);
+      },
+      flows: async () => {
+        const mod = await import("./flows.js");
+        return mod.getTools(this.client);
+      },
+      knowledge: async () => {
+        const mod = await import("./knowledge.js");
+        return mod.getTools(this.client);
+      },
+      chatter: async () => {
+        const mod = await import("./chatter.js");
+        return mod.getTools(this.client);
+      },
+      approval: async () => {
+        const mod = await import("./approval.js");
         return mod.getTools(this.client);
       },
     };
